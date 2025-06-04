@@ -6,6 +6,8 @@
 // @author       TimFinitor
 // @match        https://*.twitch.tv/*
 // @icon         https://www.twitch.tv/favicon.ico
+// @downloadURL  https://github.com/TimFinitor/twitch-chat-history/raw/refs/heads/main/twitch-chat-history.user.js
+// @updateURL    https://github.com/TimFinitor/twitch-chat-history/raw/refs/heads/main/twitch-chat-history.user.js
 // ==/UserScript==
 
 (function () {

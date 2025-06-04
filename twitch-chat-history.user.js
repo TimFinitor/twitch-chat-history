@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Chat History Viewer for Twitch
-// @namespace    https://twitch-chat-history.local
+// @namespace    https://github.com/TimFinitor/twitch-chat-history
 // @version      1.0.0
 // @description  Show user chat history with Alt+Click on usernames
 // @author       TimFinitor

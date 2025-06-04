@@ -19,7 +19,7 @@ A userscript that enhances Twitch chat by allowing you to view a user's recent c
 ## Installation
 
 1. Install a userscript manager like [Tampermonkey](https://www.tampermonkey.net/) or [Violentmonkey](https://violentmonkey.github.io/)
-2. Install this script from (Comming Soon)
+2. Install this script from [GitHub](https://github.com/TimFinitor/twitch-chat-history/raw/refs/heads/main/twitch-chat-history.user.js)
 3. Visit any Twitch stream
 
 ## Usage

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Chat History Viewer for Twitch
 // @namespace    https://github.com/TimFinitor/twitch-chat-history
-// @version      1.0.0
+// @version      1.0.1
 // @description  Show user chat history with Alt+Click on usernames
 // @author       TimFinitor
 // @match        https://*.twitch.tv/*
@@ -429,9 +429,44 @@
             }
     
             log(`Added message for ${username} (${userHistory.length} total): ${messageData.text}`);
+
+            const modal = document.getElementById('chat-history-modal');
+            if (modal && modal.style.display === 'block' && modal.dataset.currentUser === lowerUsername) {
+                const content = document.getElementById('history-content');
+                const noMessagesNode = content.querySelector('div[style*="text-align: center"]');
+                if (noMessagesNode) {
+                    content.innerHTML = '';
+                }
+
+                content.insertAdjacentHTML('afterbegin', createMessageHTML(messageData, true));
+
+                const messagesToShow = 50;
+                while (content.children.length > messagesToShow) {
+                    content.removeChild(content.lastElementChild);
+                }
+            }
         } catch (error) {
             log('History storage error (ignored):', error.message);
         }
+    }
+    
+    function createMessageHTML(msg, isNew = false) {
+        const time = new Date(msg.timestamp).toLocaleString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    
+        const messageText = escapeHtml(msg.text || '[Empty Message]');
+        const entryClass = isNew ? 'chat-message new-entry' : 'chat-message';
+        
+        return `
+            <div class="${entryClass}">
+                <div class="message-content">
+                    <div class="message-text">${messageText}</div>
+                    <div class="message-timestamp">${time}</div>
+                </div>
+            </div>
+        `;
     }
     
     function addClickHandlersToAllMessages() {
@@ -592,6 +627,8 @@
                 return;
             }
 
+            modal.dataset.currentUser = username.toLowerCase();
+
             const title = document.getElementById('history-modal-title');
             const content = document.getElementById('history-content');
 
@@ -613,25 +650,7 @@
                 const messagesHTML = userHistory
                     .slice(-messagesToShow)
                     .reverse()
-                    .map((msg, index) => {
-                        const time = new Date(msg.timestamp).toLocaleString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        });
-        
-                        const messageText = escapeHtml(msg.text || '[Empty Message]');
-                        
-                        return `
-                            <div class="chat-message" style="margin-bottom: 6px; padding: 8px; background: #181818; border-radius: 4px; transition: background 0.2s ease;" 
-                                 onmouseover="this.style.background='#222'" 
-                                 onmouseout="this.style.background='#181818'">
-                                <div style="display: flex; align-items: center;">
-                                    <div style="flex: 1; color: #ddd; line-height: 1.4; word-wrap: break-word; font-size: 13px;">${messageText}</div>
-                                    <div style="margin-left: 8px; font-size: 11px; color: #666; white-space: nowrap;">${time}</div>
-                                </div>
-                            </div>
-                        `;
-                    })
+                    .map(msg => createMessageHTML(msg))
                     .join('');
         
                 content.innerHTML = messagesHTML;
@@ -711,7 +730,7 @@
 
             if (username) {
                 username = username.replace(/^@/, '');
-                username = username.replace(/[:\s].*$/, '');
+                username = username.replace(/[:,\s].*$/, '');
 
                 if (username.length > 0 && username.length <= 25 &&
                     /^[a-zA-Z0-9_]+$/.test(username)) {
@@ -867,9 +886,63 @@
         }
     });
     
+    function injectModalStyles() {
+        const css = `
+            #chat-history-modal .chat-message {
+                margin-bottom: 6px;
+                padding: 8px;
+                background: #181818;
+                border-radius: 4px;
+                transition: background-color 0.2s ease;
+            }
+            #chat-history-modal .chat-message:hover {
+                background-color: #222;
+            }
+            #chat-history-modal .message-content {
+                display: flex;
+                align-items: center;
+            }
+            #chat-history-modal .message-text {
+                flex: 1;
+                color: #ddd;
+                line-height: 1.4;
+                word-wrap: break-word;
+                font-size: 13px;
+            }
+            #chat-history-modal .message-timestamp {
+                margin-left: 8px;
+                font-size: 11px;
+                color: #666;
+                white-space: nowrap;
+            }
+            #chat-history-modal .chat-message.new-entry {
+                animation: fadeInHighlight 1.5s ease-out forwards;
+            }
+            @keyframes fadeInHighlight {
+                0% {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                    background-color: #31313c;
+                }
+                30% {
+                    opacity: 1;
+                    transform: translateY(0);
+                    background-color: #31313c;
+                }
+                100% {
+                    background-color: #181818;
+                }
+            }
+        `;
+        const style = document.createElement('style');
+        style.textContent = css;
+        document.head.appendChild(style);
+    }
+    
     function init() {
         try {
             log('🚀 Chat History Viewer starting...');
+            injectModalStyles();
             setTimeout(createHistoryModal, 500);
             setTimeout(interceptWebSocket, 1000);
             setTimeout(setupDOMObserver, 1500);
